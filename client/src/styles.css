@@ -1,0 +1,27 @@
+.sidebar-link {
+  transition: all 0.3s;
+  border-radius: 5px;
+  padding: 10px 15px;
+  margin: 2px 0;
+}
+
+.sidebar-link:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  transform: translateX(5px);
+  text-decoration: none;
+}
+
+.breadcrumb {
+  background-color: transparent;
+  padding-left: 0;
+}
+
+.calendar-date {
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.calendar-date:hover {
+  transform: scale(1.05);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
