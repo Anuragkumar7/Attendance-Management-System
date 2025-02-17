@@ -1,0 +1,32 @@
+package com.attendance.controller;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+
+import com.attendance.entity.Student;
+import com.attendance.service.StudentService;
+
+import java.util.List;
+import java.util.Map;
+
+@RestController
+@RequestMapping("/api/attendance")
+public class AttendanceController {
+    @Autowired
+    private StudentService studentService;
+
+    @PostMapping
+    public void submitAttendance(@RequestBody List<Map<String, String>> attendanceData) {
+        for (Map<String, String> attendance : attendanceData) {
+            Long studentId = Long.parseLong(attendance.get("studentId"));
+            String date = attendance.get("date");
+            String status = attendance.get("status");
+
+            Student student = studentService.getStudentById(studentId).orElse(null);
+            if (student != null) {
+                student.getAttendance().put(date, status);
+                studentService.saveStudent(student);
+            }
+        }
+    }
+}

@@ -1,0 +1,32 @@
+package com.attendance.controller;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.bind.annotation.*;
+
+import com.attendance.entity.User;
+import com.attendance.security.JwtUtils;
+import com.attendance.service.SignupService;
+
+@RestController
+@RequestMapping("/api/auth")
+@CrossOrigin(origins = "http://localhost:5173")
+public class SignupController {
+
+    @Autowired
+    private SignupService signupService;
+
+   
+    @PostMapping("/signup")
+    public User signup(@RequestBody User user) {
+        return signupService.saveUser(user);
+    }
+
+    @GetMapping("/me")
+    public User getUser(@RequestParam String username) {
+        return signupService.findByUsername(username);
+    }
+}

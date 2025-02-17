@@ -1,0 +1,36 @@
+package com.attendance.security;
+
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.util.StringUtils;
+import java.io.IOException;
+
+public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilter {
+
+    @Override
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+            throws ServletException, IOException {
+        String token = getTokenFromRequest(request);
+
+        if (token != null && JwtUtils.validateToken(token)) {
+            UserDetails userDetails = new org.springframework.security.core.userdetails.User(
+                    JwtUtils.getUsernameFromToken(token), "", new java.util.ArrayList<>());
+            SecurityContextHolder.getContext().setAuthentication(new JwtAuthenticationToken(userDetails));
+        }
+
+        filterChain.doFilter(request, response);
+    }
+
+    private String getTokenFromRequest(HttpServletRequest request) {
+        String bearerToken = request.getHeader("Authorization");
+        if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")) {
+            return bearerToken.substring(7);
+        }
+        return null;
+    }
+}

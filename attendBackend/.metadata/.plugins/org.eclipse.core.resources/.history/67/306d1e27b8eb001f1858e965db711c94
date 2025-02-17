@@ -1,0 +1,46 @@
+package com.attendance.security;
+
+import java.util.Base64;
+import java.util.Date;
+import javax.crypto.SecretKey;
+import io.jsonwebtoken.*;
+import io.jsonwebtoken.security.Keys;
+
+public class JwtUtils {
+
+    private static final String SECRET_KEY = "your_secret_key_which_should_be_long_enough";
+    private static final long EXPIRATION_TIME = 86400000; // 1 day in milliseconds
+
+    // ✅ Ensure SECRET_KEY is properly encoded and used as a SecretKey
+    private static final SecretKey key = Keys.hmacShaKeyFor(Base64.getDecoder().decode(SECRET_KEY));
+
+    public static String generateToken(String username) {
+        return Jwts.builder()
+                .subject(username)
+                .issuedAt(new Date())
+                .expiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
+                .signWith(key)
+                .compact();
+    }
+
+    public static boolean validateToken(String token) {
+        try {
+            Jwts.parser()
+                .verifyWith(key) // ✅ Now using correct SecretKey
+                .build()
+                .parseSignedClaims(token);
+            return true;
+        } catch (JwtException e) {
+            return false;
+        }
+    }
+
+    public static String getUsernameFromToken(String token) {
+        return Jwts.parser()
+                .verifyWith(key) // ✅ Corrected method
+                .build()
+                .parseSignedClaims(token)
+                .getPayload()
+                .getSubject();
+    }
+}

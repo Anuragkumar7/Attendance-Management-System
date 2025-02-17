@@ -1,0 +1,52 @@
+package com.attendance.controller;
+
+import com.attendance.entity.User;
+import com.attendance.security.JwtUtils;
+import com.attendance.service.SignupService;
+import com.attendance.service.UserService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/api/auth")
+@CrossOrigin(origins = "http://localhost:5173")
+public class AuthController {
+
+    @Autowired
+    private AuthenticationManager authenticationManager;
+
+    @Autowired
+    private UserService userService;
+
+    @Autowired
+    private SignupService signupService;
+
+    @Autowired
+    private JwtUtils jwtUtils;
+
+    @PostMapping("/login")
+    public String login(@RequestBody User loginRequest) {
+        Authentication authentication = authenticationManager.authenticate(
+            new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword())
+        );
+
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+        String jwt = jwtUtils.generateToken(authentication);
+        
+        return jwt;
+    }
+
+    @PostMapping("/signup")
+    public User signup(@RequestBody User user) {
+        return signupService.saveUser(user);
+    }
+
+    @GetMapping("/getUser")
+    public User getUser(@RequestParam String username) {
+        return userService.findByUsername(username);
+    }
+}

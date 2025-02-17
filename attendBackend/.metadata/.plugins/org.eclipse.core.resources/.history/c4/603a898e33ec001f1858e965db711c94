@@ -1,0 +1,57 @@
+package com.attendance.controller;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.bind.annotation.*;
+
+import com.attendance.entity.User;
+import com.attendance.service.UserService;
+import java.util.HashMap;
+import java.util.Map;
+
+@RestController
+@RequestMapping("/api")
+@CrossOrigin(origins = "http://localhost:5173")
+public class AuthController {
+
+    @Autowired
+    private UserService userService;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    @PostMapping("/signup")
+    public Map<String, Object> signup(@RequestBody User user) {
+        Map<String, Object> response = new HashMap<>();
+        
+        User existingUser = userService.findByEmail(user.getEmail());
+        if (existingUser != null) {
+            response.put("success", false);
+            response.put("message", "User already exists");
+            return response;
+        }
+
+        // ✅ Hash password before saving to database
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        userService.saveUser(user);
+
+        response.put("success", true);
+        return response;
+    }
+
+    @PostMapping("/login")
+    public Map<String, Object> login(@RequestBody User user) {
+        Map<String, Object> response = new HashMap<>();
+        
+        User existingUser = userService.findByEmail(user.getEmail());
+        if (existingUser != null && passwordEncoder.matches(user.getPassword(), existingUser.getPassword())) {
+            response.put("success", true);
+            response.put("token", "dummy-jwt-token"); // ✅ You should return a real JWT token here
+            return response;
+        }
+
+        response.put("success", false);
+        response.put("message", "Invalid credentials");
+        return response;
+    }
+}

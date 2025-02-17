@@ -1,0 +1,136 @@
+package com.attendance.controller;
+
+import java.io.IOException;
+import java.util.List;
+import java.util.Optional;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import com.attendance.entity.Category;
+import com.attendance.entity.Student;
+import com.attendance.repository.CategoryRepository;
+import com.attendance.service.FileStorageService;
+import com.attendance.service.StudentService;
+
+@RestController
+@RequestMapping("/api/students")
+@CrossOrigin(origins = "http://localhost:5173")
+public class StudentController {
+
+    @Autowired
+    private StudentService studentService;
+
+    @Autowired
+    private CategoryRepository categoryRepository;
+
+    @Autowired
+    private FileStorageService fileStorageService;
+
+    // ✅ Get all students
+    @GetMapping
+    public List<Student> getAllStudents() {
+        return studentService.getAllStudents();
+    }
+
+    // ✅ Get student by ID
+    @GetMapping("/{id}")
+    public Optional<Student> getStudentById(@PathVariable Long id) {
+        return studentService.getStudentById(id);
+    }
+
+    // ✅ Create Student with Image & Resume Upload
+    @PostMapping
+    public Student createStudent(
+        @RequestParam("name") String name,
+        @RequestParam("categoryId") Long categoryId,
+        @RequestParam("prn") String prn,
+        @RequestParam("gender") String gender,
+        @RequestParam("fatherName") String fatherName,
+        @RequestParam("email") String email,
+        @RequestParam("dob") String dob,
+        @RequestParam(value = "resume", required = false) MultipartFile resume,
+        @RequestParam(value = "image", required = false) MultipartFile image
+    ) throws IOException {
+
+        // Fetch category from DB
+        Optional<Category> categoryOpt = categoryRepository.findById(categoryId);
+        if (!categoryOpt.isPresent()) {
+            throw new RuntimeException("Category not found!");
+        }
+
+        // Store files and generate URLs
+        String resumeUrl = (resume != null) ? fileStorageService.storeFile(resume) : null;
+        String imageUrl = (image != null) ? fileStorageService.storeFile(image) : null;
+
+        // Create new Student object
+        Student student = new Student();
+        student.setName(name);
+        student.setCategory(categoryOpt.get());
+        student.setPrn(prn);
+        student.setGender(gender);
+        student.setFatherName(fatherName);
+        student.setEmail(email);
+        student.setDob(dob);
+        student.setResume(resumeUrl);
+        student.setImage(imageUrl);
+
+        return studentService.saveStudent(student);
+    }
+
+    // ✅ Update Student (With File Support)
+    @PutMapping("/{id}")
+    public Student updateStudent(
+        @PathVariable Long id,
+        @RequestParam("name") String name,
+        @RequestParam("categoryId") Long categoryId,
+        @RequestParam("prn") String prn,
+        @RequestParam("gender") String gender,
+        @RequestParam("fatherName") String fatherName,
+        @RequestParam("email") String email,
+        @RequestParam("dob") String dob,
+        @RequestParam(value = "resume", required = false) MultipartFile resume,
+        @RequestParam(value = "image", required = false) MultipartFile image
+    ) throws IOException {
+
+        // Find existing student
+        Optional<Student> existingStudentOpt = studentService.getStudentById(id);
+        if (!existingStudentOpt.isPresent()) {
+            throw new RuntimeException("Student not found!");
+        }
+
+        Student student = existingStudentOpt.get();
+
+        // Fetch category
+        Optional<Category> categoryOpt = categoryRepository.findById(categoryId);
+        if (!categoryOpt.isPresent()) {
+            throw new RuntimeException("Category not found!");
+        }
+
+        // Update fields
+        student.setName(name);
+        student.setCategory(categoryOpt.get());
+        student.setPrn(prn);
+        student.setGender(gender);
+        student.setFatherName(fatherName);
+        student.setEmail(email);
+        student.setDob(dob);
+
+        // Update files if provided
+        if (resume != null) {
+            student.setResume(fileStorageService.storeFile(resume));
+        }
+        if (image != null) {
+            student.setImage(fileStorageService.storeFile(image));
+        }
+
+        return studentService.saveStudent(student);
+    }
+
+    // ✅ Delete Student
+    @DeleteMapping("/{id}")
+    public void deleteStudent(@PathVariable Long id) {
+        studentService.deleteStudent(id);
+    }
+}

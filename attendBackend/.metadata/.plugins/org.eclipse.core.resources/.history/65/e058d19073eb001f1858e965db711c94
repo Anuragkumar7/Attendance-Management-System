@@ -1,0 +1,39 @@
+package com.attendance.controller;
+
+import com.attendance.entity.User;
+import com.attendance.service.UserService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/api/auth")
+public class AuthController {
+
+    @Autowired
+    private UserService userService;
+
+    @Autowired
+    private BCryptPasswordEncoder passwordEncoder;
+
+    @PostMapping("/login")
+    public String login(@RequestBody User loginRequest) {
+        User user = userService.findByEmail(loginRequest.getEmail());
+        if (user != null && passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
+            // Generate JWT token (for simplicity, we'll return a dummy token)
+            return "dummy-jwt-token";
+        }
+        throw new RuntimeException("Invalid credentials");
+    }
+    
+
+    @PostMapping("/signup")
+    public User signup(@RequestBody User user) {
+        return userService.saveUser(user);
+    }
+
+    @GetMapping("/me")
+    public User getUser(@RequestParam String username) {
+        return userService.findByUsername(username);
+    }
+}

@@ -1,0 +1,5 @@
+package com.example.gamesignup.entity;
+
+public class User {
+
+}

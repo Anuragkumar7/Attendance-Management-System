@@ -1,0 +1,5 @@
+package com.attendance.dto;
+
+public class AttendanceRequest {
+
+}

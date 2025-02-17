@@ -1,0 +1,44 @@
+package com.attendance.service;
+
+import com.attendance.entity.Student;
+import com.attendance.repository.StudentRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.Optional;
+
+@Service
+public class StudentService {
+    @Autowired
+    private StudentRepository studentRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    public List<Student> getAllStudents() {
+        return studentRepository.findAll();
+    }
+
+    public Optional<Student> getStudentById(Long id) {
+        return studentRepository.findById(id);
+    }
+
+    public Optional<Student> getStudentByPrn(String prn) {
+        return studentRepository.findByPrn(prn);
+    }
+
+    public Student saveStudent(Student student) {
+        student.setPassword(passwordEncoder.encode(student.getPassword()));
+        return studentRepository.save(student);
+    }
+
+    public void deleteStudent(Long id) {
+        studentRepository.deleteById(id);
+    }
+
+    public PasswordEncoder getPasswordEncoder() {
+        return passwordEncoder;
+    }
+}

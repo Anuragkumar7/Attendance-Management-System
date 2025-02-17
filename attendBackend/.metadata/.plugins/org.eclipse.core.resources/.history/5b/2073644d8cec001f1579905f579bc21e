@@ -1,0 +1,60 @@
+package com.attendance.controller;
+
+import org.springframework.web.bind.annotation.*;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+
+import com.attendance.entity.Student;
+import com.attendance.entity.Attendance;
+import com.attendance.dto.AttendanceRequest;
+import com.attendance.repository.StudentRepository;
+import com.attendance.repository.AttendanceRepository;
+
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Optional;
+
+@RestController
+@RequestMapping("/api/attendance")
+@CrossOrigin(origins = "http://localhost:5173")
+public class AttendanceController {
+
+    @Autowired
+    private AttendanceRepository attendanceRepository;
+
+    @Autowired
+    private StudentRepository studentRepository;
+
+    // Fetch attendance for a specific date
+    @GetMapping
+    public List<Attendance> getAttendanceByDate(@RequestParam("date") LocalDate date) {
+        return attendanceRepository.findByDate(date);
+    }
+
+    // Submit attendance with validation to prevent duplicates
+    @PostMapping
+    public ResponseEntity<String> submitAttendance(@RequestBody List<AttendanceRequest> attendanceList) {
+        for (AttendanceRequest request : attendanceList) {
+            Optional<Student> studentOpt = studentRepository.findById(request.getStudentId());
+            if (studentOpt.isEmpty()) {
+                return ResponseEntity.badRequest().body("Error: Student ID " + request.getStudentId() + " not found!");
+            }
+
+            Student student = studentOpt.get();
+
+            // Check if attendance already exists for this student on the selected date
+            Optional<Attendance> existingRecord = attendanceRepository.findByStudentIdAndDate(student.getId(), request.getDate());
+            if (existingRecord.isPresent()) {
+                return ResponseEntity.badRequest().body("Attendance for student " + student.getId() + " on " + request.getDate() + " already exists!");
+            }
+
+            // Save new attendance record
+            Attendance attendance = new Attendance();
+            attendance.setStudent(student);
+            attendance.setStatus(request.getStatus());
+            attendance.setDate(request.getDate());
+            attendanceRepository.save(attendance);
+        }
+        return ResponseEntity.ok("Attendance saved successfully!");
+    }
+}

@@ -1,0 +1,52 @@
+package com.attendance.controller;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import com.attendance.entity.Attendance;
+import com.attendance.entity.Student;
+import com.attendance.repository.AttendanceRepository;
+import com.attendance.repository.StudentRepository;
+import com.attendance.service.StudentService;
+
+import java.util.List;
+import java.util.Map;
+
+@CrossOrigin(origins = "http://localhost:5173")
+@RestController
+@RequestMapping("/api")
+public class AttendanceController {
+    private final AttendanceRepository attendanceRepository;
+    private final StudentRepository studentRepository;
+
+    public AttendanceController(AttendanceRepository attendanceRepository, StudentRepository studentRepository) {
+        this.attendanceRepository = attendanceRepository;
+        this.studentRepository = studentRepository;
+    }
+
+    @PostMapping("/attendance")
+    public ResponseEntity<String> markAttendance(@RequestBody List<AttendanceRequest> attendanceList) {
+        for (AttendanceRequest att : attendanceList) {
+            Student student = studentRepository.findById(att.getStudentId()).orElse(null);
+            if (student != null) {
+                Attendance attendance = new Attendance();
+                attendance.setStudent(student);
+                attendance.setStatus(att.getStatus());
+                attendanceRepository.save(attendance);
+            }
+        }
+        return ResponseEntity.ok("Attendance marked successfully!");
+    }
+
+    static class AttendanceRequest {
+        private Long studentId;
+        private String status;
+
+        public Long getStudentId() { return studentId; }
+        public void setStudentId(Long studentId) { this.studentId = studentId; }
+
+        public String getStatus() { return status; }
+        public void setStatus(String status) { this.status = status; }
+    }
+}

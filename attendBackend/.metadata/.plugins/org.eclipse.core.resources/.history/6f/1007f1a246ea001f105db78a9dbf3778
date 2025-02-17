@@ -1,0 +1,37 @@
+package com.attendance.controller;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Optional;
+
+@RestController
+@RequestMapping("/api/attendance")
+@CrossOrigin(origins = "http://localhost:3000") // Adjust if frontend runs on a different port
+public class AttendanceController {
+
+    @Autowired
+    private AttendanceRepository attendanceRepository;
+
+    // Fetch attendance for a specific date
+    @GetMapping
+    public List<Attendance> getAttendanceByDate(@RequestParam("date") LocalDate date) {
+        return attendanceRepository.findByDate(date);
+    }
+
+    // Submit attendance, ensuring no duplicate entries
+    @PostMapping
+    public String submitAttendance(@RequestBody List<Attendance> attendanceList) {
+        for (Attendance attendance : attendanceList) {
+            Optional<Attendance> existingRecord = attendanceRepository.findByStudentIdAndDate(
+                attendance.getStudent().getId(), 
+                attendance.getDate()
+            );
+            if (existingRecord.isPresent()) {
+                return "Attendance for student " + attendance.getStudent().getId() + " on " + attendance.getDate() + " already exists!";
+            }
+            attendanceRepository.save(attendance);
+        }
+        return "Attendance saved successfully!";
+    }
+}

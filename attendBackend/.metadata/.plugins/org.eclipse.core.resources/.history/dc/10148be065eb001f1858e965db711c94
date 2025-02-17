@@ -1,0 +1,190 @@
+package com.attendance.controller;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.List;
+import java.util.Optional;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+
+import com.attendance.entity.Category;
+import com.attendance.entity.Student;
+import com.attendance.repository.CategoryRepository;
+import com.attendance.service.StudentService;
+
+@RestController
+@RequestMapping("/api/students")
+@CrossOrigin(origins = "http://localhost:5173")
+public class StudentController {
+    
+    private static final String UPLOAD_DIR = "uploads/";
+
+    @Autowired
+    private StudentService studentService;
+
+    @Autowired
+    private CategoryRepository categoryRepository;
+
+    // ✅ Get All Students
+    @GetMapping
+    public ResponseEntity<List<Student>> getAllStudents() {
+        List<Student> students = studentService.getAllStudents();
+        return ResponseEntity.ok(students);
+    }
+
+    // ✅ Get Student by ID
+    @GetMapping("/{id}")
+    public ResponseEntity<Student> getStudentById(@PathVariable Long id) {
+        Optional<Student> student = studentService.getStudentById(id);
+        return student.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    // ✅ Student Login
+    @PostMapping("/login")
+    public ResponseEntity<Student> loginStudent(
+        @RequestParam("prn") String prn,
+        @RequestParam("password") String password
+    ) {
+        Optional<Student> studentOpt = studentService.getStudentByPrn(prn);
+        if (studentOpt.isPresent()) {
+            Student student = studentOpt.get();
+            if (studentService.getPasswordEncoder().matches(password, student.getPassword())) {
+                return ResponseEntity.ok(student);
+            } else {
+                return ResponseEntity.status(401).body(null); // Unauthorized
+            }
+        } else {
+            return ResponseEntity.status(401).body(null); // Unauthorized
+        }
+    }
+
+    // ✅ Create Student with File Uploads (Resume + Image)
+    @PostMapping
+    public ResponseEntity<Student> createStudent(
+        @RequestParam("name") String name,
+        @RequestParam("categoryId") Long categoryId,
+        @RequestParam("prn") String prn,
+        @RequestParam("gender") String gender,
+        @RequestParam("fatherName") String fatherName,
+        @RequestParam("email") String email,
+        @RequestParam("dob") String dob,
+        @RequestParam("password") String password,
+        @RequestParam(value = "resume", required = false) MultipartFile resume,
+        @RequestParam(value = "image", required = false) MultipartFile image
+    ) throws IOException {
+
+        Student student = new Student();
+        student.setName(name);
+        student.setPrn(prn);
+        student.setGender(gender);
+        student.setFatherName(fatherName);
+        student.setEmail(email);
+        student.setDob(dob);
+        student.setPassword(password);
+
+        // Set Category
+        Optional<Category> category = categoryRepository.findById(categoryId);
+        if (category.isPresent()) {
+            student.setCategory(category.get());
+        } else {
+            return ResponseEntity.badRequest().body(null); // Category not found
+        }
+
+        // Upload Resume
+        if (resume != null && !resume.isEmpty()) {
+            student.setResume(saveFile(resume));
+        }
+
+        // Upload Image
+        if (image != null && !image.isEmpty()) {
+            student.setImage(saveFile(image));
+        }
+
+        Student savedStudent = studentService.saveStudent(student);
+        return ResponseEntity.ok(savedStudent);
+    }
+
+    // ✅ Update Student
+    @PutMapping("/{id}")
+    public ResponseEntity<Student> updateStudent(
+        @PathVariable Long id,
+        @RequestParam("name") String name,
+        @RequestParam("categoryId") Long categoryId,
+        @RequestParam("prn") String prn,
+        @RequestParam("gender") String gender,
+        @RequestParam("fatherName") String fatherName,
+        @RequestParam("email") String email,
+        @RequestParam("dob") String dob,
+        @RequestParam("password") String password,
+        @RequestParam(value = "resume", required = false) MultipartFile resume,
+        @RequestParam(value = "image", required = false) MultipartFile image
+    ) throws IOException {
+
+        Optional<Student> existingStudentOpt = studentService.getStudentById(id);
+        if (!existingStudentOpt.isPresent()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        Student student = existingStudentOpt.get();
+        student.setName(name);
+        student.setPrn(prn);
+        student.setGender(gender);
+        student.setFatherName(fatherName);
+        student.setEmail(email);
+        student.setDob(dob);
+        student.setPassword(password);
+
+        // Update Category
+        Optional<Category> category = categoryRepository.findById(categoryId);
+        category.ifPresent(student::setCategory);
+
+        // Update Resume if provided
+        if (resume != null && !resume.isEmpty()) {
+            student.setResume(saveFile(resume));
+        }
+
+        // Update Image if provided
+        if (image != null && !image.isEmpty()) {
+            student.setImage(saveFile(image));
+        }
+
+        Student updatedStudent = studentService.saveStudent(student);
+        return ResponseEntity.ok(updatedStudent);
+    }
+
+    // ✅ Delete Student
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteStudent(@PathVariable Long id) {
+        Optional<Student> student = studentService.getStudentById(id);
+        if (!student.isPresent()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        studentService.deleteStudent(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    // ✅ File Saving Helper Method
+    private String saveFile(MultipartFile file) throws IOException {
+        File uploadDir = new File(UPLOAD_DIR);
+        if (!uploadDir.exists()) {
+            uploadDir.mkdirs();
+        }
+
+        String filename = System.currentTimeMillis() + "_" + file.getOriginalFilename();
+        Path filePath = Paths.get(UPLOAD_DIR, filename);
+        Files.write(filePath, file.getBytes());
+
+        return ServletUriComponentsBuilder.fromCurrentContextPath()
+                .path("/" + UPLOAD_DIR)
+                .path(filename)
+                .toUriString();
+    }
+}
