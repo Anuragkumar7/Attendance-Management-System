@@ -15,6 +15,7 @@ const StudentManagement = () => {
   const [dob, setDob] = useState("");
   const [resume, setResume] = useState(null);
   const [image, setImage] = useState(null);
+  const [password, setPassword] = useState("");  // New password state
   const [editingStudent, setEditingStudent] = useState(null);
 
   // Fetch categories from the backend
@@ -29,17 +30,20 @@ const StudentManagement = () => {
       });
   }, []);
 
-  // Fetch students from the backend
-  useEffect(() => {
-    axios
-      .get("http://localhost:8082/api/students")
-      .then((response) => {
-        setStudents(response.data);
-      })
-      .catch((error) => {
-        console.error("There was an error fetching the students!", error);
-      });
-  }, []);
+useEffect(() => {
+  axios
+    .get("http://localhost:8082/api/students")
+    .then((response) => {
+      // Assuming the response data is an array of students
+      const studentsData = response.data; // Adjust this based on your actual API response structure
+
+     
+      setStudents(studentsData); // Save the students data to state
+    })
+    .catch((error) => {
+      console.error("There was an error fetching the students!", error);
+    });
+}, []);
 
   const handleFileUpload = async (file) => {
     if (!file) return null;
@@ -61,17 +65,19 @@ const StudentManagement = () => {
       return null;
     }
   };
-const handleDeleteStudent = async (studentId) => {
-  if (!window.confirm("Are you sure you want to delete this student?")) return;
 
-  try {
-    await axios.delete(`http://localhost:8082/api/students/${studentId}`);
-    setStudents((prev) => prev.filter((student) => student.id !== studentId));
-  } catch (error) {
-    console.error("Error deleting student:", error);
-    alert("Failed to delete the student. Please try again.");
-  }
-};
+  const handleDeleteStudent = async (studentId) => {
+    if (!window.confirm("Are you sure you want to delete this student?"))
+      return;
+
+    try {
+      await axios.delete(`http://localhost:8082/api/students/${studentId}`);
+      setStudents((prev) => prev.filter((student) => student.id !== studentId));
+    } catch (error) {
+      console.error("Error deleting student:", error);
+      alert("Failed to delete the student. Please try again.");
+    }
+  };
 
   // Handle adding or updating a student
   const handleAddStudent = async () => {
@@ -82,13 +88,15 @@ const handleDeleteStudent = async (studentId) => {
       !gender ||
       !fatherName ||
       !email ||
-      !dob
+      !dob ||
+      !password  // Ensure password is provided
     ) {
       alert("Please enter all required fields.");
       return;
     }
 
     try {
+      // Set the role to 'USER' by default
       const resumeUrl = await handleFileUpload(resume);
       const imageUrl = await handleFileUpload(image);
 
@@ -103,6 +111,8 @@ const handleDeleteStudent = async (studentId) => {
         dob,
         resume: resumeUrl,
         image: imageUrl,
+        password,  // Include the password in the student object
+        role: "USER", // Set the role as 'USER' here
       };
 
       if (editingStudent) {
@@ -136,6 +146,7 @@ const handleDeleteStudent = async (studentId) => {
       setDob("");
       setResume(null);
       setImage(null);
+      setPassword("");  // Reset password field
     } catch (error) {
       console.error("There was an error saving the student!", error);
     }
@@ -153,11 +164,14 @@ const handleDeleteStudent = async (studentId) => {
     setDob(student.dob);
     setResume(student.resume);
     setImage(student.image);
+    setPassword("");  // Don't pre-fill password for editing
   };
 
   return (
     <div className="d-flex">
-      <Sidebar />
+      <div className="col-md-3 col-lg-3 sidebar">
+        <Sidebar />
+      </div>
       <div className="flex-grow-1 p-4 bg-light">
         <h2 className="text-center mb-4 text-primary">
           {editingStudent ? "Edit Student" : "Student Management"}
@@ -244,6 +258,16 @@ const handleDeleteStudent = async (studentId) => {
               />
             </div>
             <div className="col-md-6">
+              <label className="form-label">Password</label>
+              <input
+                type="password"
+                className="form-control"
+                placeholder="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+            </div>
+            <div className="col-md-6">
               <label className="form-label">Resume</label>
               <input
                 type="file"
@@ -268,12 +292,16 @@ const handleDeleteStudent = async (studentId) => {
             {editingStudent ? "Update Student" : "Add Student"}
           </button>
         </form>
-        <h3 className="text-center mb-4 text-secondary">Student List</h3>
+        <h3 className="text-center mb-4 text-secondary">
+          Student & Teachers List
+        </h3>
         <div className="student-list mt-4">
           {students.map((student) => (
             <div
               key={student.id}
-              className="card shadow-sm p-3 mb-4 border-0 rounded"
+              className={`card shadow-sm p-3 mb-4 border-0 rounded ${
+                student.role === "PROFESSOR" ? "bg-info" : ""
+              }`} // Added conditional class
             >
               <div className="d-flex justify-content-between align-items-center mb-2">
                 <h5 className="mb-0 text-primary">{student.name}</h5>

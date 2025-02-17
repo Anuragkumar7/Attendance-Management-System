@@ -13,17 +13,23 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const studentId = localStorage.getItem("studentId") || "1";
-
+  // Retrieve studentId from localStorage, defaulting to "1" for testing
+  const studentId = localStorage.getItem("studentId") ;
+  const role = localStorage.getItem("role");
+  // Fetch student data using studentId
   useEffect(() => {
     const fetchStudentData = async () => {
       try {
         const response = await axios.get(
           `http://localhost:8082/api/attendance/student/${studentId}`
         );
-        setStudent(response.data.student);
-        setAttendance(response.data.attendance);
-      
+        // Ensure response contains student and attendance data
+        if (response.data.student && response.data.attendance) {
+          setStudent(response.data.student);
+          setAttendance(response.data.attendance);
+        } else {
+          throw new Error("Invalid response structure.");
+        }
       } catch (err) {
         console.error("Error fetching student data:", err);
         setError("Failed to load student information.");
@@ -34,9 +40,8 @@ const Dashboard = () => {
 
     fetchStudentData();
   }, [studentId]);
-// useEffect(() => {
-//   console.log(role)
-// }, [role]);
+
+  // Update the current time every second
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentTime(new Date());
@@ -44,6 +49,7 @@ const Dashboard = () => {
     return () => clearInterval(interval);
   }, []);
 
+  // Format date and time for display
   const formatDate = (date) =>
     date.toLocaleDateString("en-US", {
       weekday: "long",
@@ -59,6 +65,7 @@ const Dashboard = () => {
       second: "2-digit",
     });
 
+  // Handle loading and error states
   if (loading) return <p>Loading student data...</p>;
   if (error) return <p className="text-danger">{error}</p>;
 
@@ -69,21 +76,17 @@ const Dashboard = () => {
 
   return (
     <div className="container-fluid">
+          <Navbar userName={student?.name || "Student"} />
       <div className="row">
         {/* Sidebar */}
-      
-          <div className="col-md-3 col-lg-2 p-0 text-white">
-            <Sidebar  />
-          </div>
-       
+        <div className="col-md-3 col-lg-2 p-0 text-white">
+          <Sidebar  userRole={role}/>
+        </div>
 
         {/* Main Dashboard Content */}
         <div className="col-md-9 col-lg-10 p-4 bg-light">
-          <Navbar userName={student?.name || "Student"} />
           <div className="d-flex justify-content-between align-items-center mb-4 mt-3">
             <div className="d-flex align-items-center gap-3 ms-auto">
-              {" "}
-              {/* Added ms-auto to align to the right */}
               <div className="text-end">
                 <span className="d-block h5 mb-0 text-dark fw-bold">
                   {formatDate(currentTime).split(",")[0]}

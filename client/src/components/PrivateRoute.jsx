@@ -12,28 +12,38 @@ const PrivateRoute = ({ children, roles }) => {
         const userResponse = await axios.get(
           "http://localhost:8082/api/auth/me",
           {
-            withCredentials: true,
+            withCredentials: true, // Keep credentials with the request
             headers: { "Content-Type": "application/json" },
           }
         );
+
+        // Assuming the API returns a `role` field
         const userRole = userResponse.data.role;
+
+        // Check if the user role matches the allowed roles
         setIsAuthorized(roles.includes(userRole));
       } catch (error) {
         console.error("Authorization failed", error);
+        // Handle authorization error (like expired session)
         setIsAuthorized(false);
       } finally {
-        setIsLoading(false); // Once the request is done, stop loading
+        setIsLoading(false); // Set loading to false after the check
       }
     };
 
     fetchUserRole();
-  }, [roles]);
+  }, [roles]); // Re-run the effect if the roles prop changes
 
   if (isLoading) {
-    return <div>Loading...</div>; // Show a loading indicator while the role is being checked
+    return <div>Loading...</div>; // Loading state
   }
 
-  return isAuthorized ? children : <Navigate to="/login" />;
+  if (isAuthorized) {
+    return children; // If the user is authorized, render the children
+  }
+
+  // If the user is not authorized, redirect them to the login page
+  return <Navigate to="/login" />;
 };
 
 export default PrivateRoute;

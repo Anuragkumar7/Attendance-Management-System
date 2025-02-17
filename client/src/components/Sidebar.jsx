@@ -1,13 +1,15 @@
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import "bootstrap-icons/font/bootstrap-icons.css";
 
 const Sidebar = ({ userRole }) => {
-  useEffect(() => {
-    console.log(userRole);
-  }, [userRole])
   const [collapsed, setCollapsed] = useState(false);
-  // console.log(userRole); // Make sure userRole is being passed correctly
+  const navigate = useNavigate(); // useNavigate hook for redirect
+  const [userRoleState, setUserRoleState] = useState(userRole);
+
+  useEffect(() => {
+    setUserRoleState(localStorage.getItem("role")); // Update userRole if it changes
+  }, [userRole]);
 
   // Define the menu links based on roles
   const menuItems = {
@@ -24,7 +26,24 @@ const Sidebar = ({ userRole }) => {
   };
 
   // Select the menu based on the user's role
-  const userMenu = menuItems[userRole] || menuItems["PROFESSOR"]; // Default to 'USER' if no match
+  const userMenu = menuItems[userRoleState] || menuItems["USER"];
+
+  // Logout handler
+  const handleLogout = async () => {
+    try {
+      await fetch("/logout", { method: "POST", credentials: "include" });
+
+      // Clear localStorage
+      localStorage.removeItem("studentId");
+      localStorage.removeItem("role");
+      localStorage.removeItem("userName");
+
+      // Redirect to login
+      navigate("/login");
+    } catch (error) {
+      console.error("Logout failed", error);
+    }
+  };
 
   return (
     <div
@@ -70,7 +89,6 @@ const Sidebar = ({ userRole }) => {
             <i className="bi bi-envelope-plus"></i>
             {!collapsed && (
               <a
-              // pankajk@cdac.in
                 href="mailto:anurag.kum.135@gmail.com"
                 className="ms-2"
                 style={{ textDecoration: "none", color: "#000" }}
@@ -78,6 +96,17 @@ const Sidebar = ({ userRole }) => {
                 Apply Leave
               </a>
             )}
+          </button>
+        </div>
+
+        {/* Logout button */}
+        <div className="p-3 mt-2">
+          <button
+            className="btn btn-danger w-100 d-flex align-items-center justify-content-center"
+            onClick={handleLogout}
+          >
+            <i className="bi bi-box-arrow-right"></i>
+            {!collapsed && <span className="ms-2">Logout</span>}
           </button>
         </div>
       </div>

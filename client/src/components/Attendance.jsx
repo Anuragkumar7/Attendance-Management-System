@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import Sidebar from "./Sidebar";
 import "bootstrap/dist/css/bootstrap.min.css";
-
+import Navbar from "./Navbar";
 const Attendance = () => {
   const [students, setStudents] = useState([]);
   const [filteredStudents, setFilteredStudents] = useState([]);
@@ -16,6 +16,9 @@ const Attendance = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [message, setMessage] = useState("");
+
+  // Get userName from localStorage
+  const userName = localStorage.getItem("userName");
 
   // Fetch categories from the backend
   useEffect(() => {
@@ -39,8 +42,11 @@ const Attendance = () => {
     const fetchStudents = async () => {
       try {
         const response = await axios.get("http://localhost:8082/api/students");
-        setStudents(response.data);
-        setFilteredStudents(response.data);
+        const filteredStudents = response.data.filter(
+          (student) => student.role === "USER"
+        );
+        setStudents(filteredStudents);
+        setFilteredStudents(filteredStudents);
       } catch (err) {
         console.error("Error fetching students:", err);
         setError("Failed to load student data.");
@@ -129,6 +135,9 @@ const Attendance = () => {
 
   return (
     <div className="container-fluid">
+      {/* Pass userName as prop to Navbar */}
+      <Navbar userName={userName} />
+
       <div className="row">
         {/* Sidebar */}
         <div className="col-md-3 bg-dark text-white p-3">

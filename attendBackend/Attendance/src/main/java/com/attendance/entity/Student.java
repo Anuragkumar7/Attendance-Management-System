@@ -12,7 +12,7 @@ public class Student {
 
     private String name;
 
-    @Column(unique = true, nullable = false) // Ensure PRN is unique
+    @Column(unique = true, nullable = false)
     private String prn;
     
     private String gender;
@@ -21,7 +21,8 @@ public class Student {
     private String dob;
     private String resume;
     private String image;
-    private String role; 
+    private String role;
+    private String password;
 
     @ManyToOne
     @JoinColumn(name = "category_id")
@@ -32,9 +33,6 @@ public class Student {
     @MapKeyColumn(name = "date")
     @Column(name = "status")
     private Map<String, String> attendance = new HashMap<>();
-
-    @OneToOne(mappedBy = "student") // One-to-one relationship mapped from User
-    private User user;
 
     // Getters and setters
     public Long getId() { return id; }
@@ -73,6 +71,6 @@ public class Student {
     public String getRole() { return role; }
     public void setRole(String role) { this.role = role; }
 
-    public User getUser() { return user; }
-    public void setUser(User user) { this.user = user; }
+    public String getPassword() { return password; }
+    public void setPassword(String password) { this.password = password; }
 }

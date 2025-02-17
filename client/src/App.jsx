@@ -8,7 +8,7 @@ import ProfilePage from "./components/ProfilePage";
 import ErrorBoundary from "./components/ErrorBoundary";
 import LoginPage from "./components/LoginPage";
 import SignUp from "./components/SignUp";
-import PrivateRoute from "./components/PrivateRoute"; 
+import PrivateRoute from "./components/PrivateRoute";
 
 function App() {
   return (

@@ -16,7 +16,7 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError(""); // Reset error message before new request
+    setError(""); 
 
     try {
       const response = await fetch("http://localhost:8082/api/auth/login", {
@@ -35,7 +35,15 @@ const Login = () => {
 
       if (data.success) {
         const userRole = data.role;
-        console.log(userRole);
+        const studentId = data.studentId;
+        const name = data.userName;
+        console.log(data.role);
+
+        if (studentId) {
+          localStorage.setItem("studentId", studentId);
+          localStorage.setItem("role", userRole);
+          localStorage.setItem("userName", name);
+        }
 
         if (validateRole(userRole)) {
           if (userRole === "PROFESSOR") {
@@ -182,6 +190,21 @@ const Login = () => {
                 >
                   Forgot Password
                 </a>
+              </div>
+
+              {/* Sign Up Button */}
+              <div className="text-center mt-3">
+                <button
+                  className="btn btn-success px-4 py-2"
+                  style={{
+                    borderRadius: "20px",
+                    backgroundColor: "#28a745",
+                    borderColor: "#28a745",
+                  }}
+                  onClick={() => navigate("/signup")} // Navigate to the Sign Up page
+                >
+                  Sign Up
+                </button>
               </div>
             </form>
           </div>
