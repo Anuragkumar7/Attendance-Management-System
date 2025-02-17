@@ -9,17 +9,16 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-
 @Configuration
 public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            .cors().and()
-            .csrf().disable()  
+            .cors().and()  // Enable CORS support
+            .csrf().disable()  // Disable CSRF (for stateless authentication like JWT)
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers(
+                .requestMatchers(  // Public routes that don't require authentication
                     "/api/auth/signup", 
                     "/api/auth/login", 
                     "/api/auth/me", 
@@ -27,9 +26,9 @@ public class SecurityConfig {
                     "/api/students/**",
                     "/api/attendance/**"
                 ).permitAll()
-                .anyRequest().authenticated()
+                .anyRequest().authenticated()  // All other routes require authentication
             )
-            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)); // 🔒 Enforce stateless sessions for security
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));  // Stateless authentication (no sessions)
 
         return http.build();
     }
@@ -41,6 +40,6 @@ public class SecurityConfig {
 
     @Bean
     public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
+        return new BCryptPasswordEncoder();  // For securely encoding passwords
     }
 }

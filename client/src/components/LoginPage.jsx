@@ -16,7 +16,7 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError(""); 
+    setError("");
 
     try {
       const response = await fetch("http://localhost:8082/api/auth/login", {
@@ -37,7 +37,6 @@ const Login = () => {
         const userRole = data.role;
         const studentId = data.studentId;
         const name = data.userName;
-        console.log(data.role);
 
         if (studentId) {
           localStorage.setItem("studentId", studentId);
@@ -46,11 +45,7 @@ const Login = () => {
         }
 
         if (validateRole(userRole)) {
-          if (userRole === "PROFESSOR") {
-            navigate("/attendance");
-          } else if (userRole === "USER") {
-            navigate("/dashboard");
-          }
+          navigate(userRole === "PROFESSOR" ? "/attendance" : "/dashboard");
         } else {
           setError("Unknown role. Please contact support.");
         }
@@ -65,17 +60,17 @@ const Login = () => {
 
   return (
     <div>
+      {/* Logo Section */}
       <div className="position-absolute top-0 start-0 m-3">
         <img
           src="./logo.png"
           alt="Logo"
           className="img-fluid"
-          style={{
-            height: "80px",
-            width: "100%",
-          }}
+          style={{ height: "80px", width: "100%" }}
         />
       </div>
+
+      {/* Login Form */}
       <div
         className="d-flex justify-content-center align-items-center"
         style={{
@@ -86,37 +81,25 @@ const Login = () => {
       >
         <div
           className="d-flex bg-white shadow rounded"
-          style={{
-            width: "80%",
-            maxWidth: "900px",
-            overflow: "hidden",
-          }}
+          style={{ width: "80%", maxWidth: "900px", overflow: "hidden" }}
         >
           {/* Left Section - Image */}
           <div
             className="d-flex align-items-center justify-content-center p-4"
-            style={{
-              flex: 1,
-              backgroundColor: "#243142",
-            }}
+            style={{ flex: 1, backgroundColor: "#243142" }}
           >
             <img
               src="./profe.png"
               alt="Professor Illustration"
               className="img-fluid"
-              style={{
-                maxWidth: "100%",
-                maxHeight: "400px",
-              }}
+              style={{ maxWidth: "100%", maxHeight: "400px" }}
             />
           </div>
 
           {/* Right Section - Form */}
           <div
             className="d-flex flex-column justify-content-center p-4"
-            style={{
-              flex: 1,
-            }}
+            style={{ flex: 1 }}
           >
             <h2 className="text-center mb-4" style={{ color: "#1E3D59" }}>
               Login
@@ -168,11 +151,12 @@ const Login = () => {
                 </div>
               </div>
 
-              <div className="text-center">
+              <div className="text-center d-flex justify-content-center align-items-center">
                 <button
                   type="submit"
                   className="btn btn-primary px-4 py-2"
                   style={{
+                    marginTop: "20px",
                     borderRadius: "20px",
                     backgroundColor: "#1E3D59",
                     borderColor: "#1E3D59",
@@ -180,32 +164,33 @@ const Login = () => {
                 >
                   Login
                 </button>
+                <div className="text-center mt-3">
+                  <button
+                    className="btn btn-success px-4 py-2"
+                    style={{
+                      borderRadius: "20px",
+                      backgroundColor: "#28a745",
+                      borderColor: "#28a745",
+                    }}
+                    onClick={() => navigate("/signup")}
+                  >
+                    Sign Up
+                  </button>
+                </div>
               </div>
 
+              {/* Forgot Password Link */}
               <div className="text-center mt-3">
-                <a
-                  href="#"
-                  className="text-decoration-none"
+                <button
+                  className="btn btn-link"
                   style={{ color: "#1E3D59" }}
+                  onClick={() => navigate("/forgot-password")}
                 >
-                  Forgot Password
-                </a>
+                  Forgot Password?
+                </button>
               </div>
 
               {/* Sign Up Button */}
-              <div className="text-center mt-3">
-                <button
-                  className="btn btn-success px-4 py-2"
-                  style={{
-                    borderRadius: "20px",
-                    backgroundColor: "#28a745",
-                    borderColor: "#28a745",
-                  }}
-                  onClick={() => navigate("/signup")} // Navigate to the Sign Up page
-                >
-                  Sign Up
-                </button>
-              </div>
             </form>
           </div>
         </div>

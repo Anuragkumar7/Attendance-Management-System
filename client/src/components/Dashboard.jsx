@@ -76,9 +76,9 @@ const Dashboard = () => {
 
   return (
     <div className="container-fluid">
-          <Navbar userName={student?.name || "Student"} />
       <div className="row">
         {/* Sidebar */}
+          <Navbar userName={student?.name || "Student"} />
         <div className="col-md-3 col-lg-2 p-0 text-white">
           <Sidebar  userRole={role}/>
         </div>

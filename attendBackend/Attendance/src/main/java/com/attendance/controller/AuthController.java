@@ -2,6 +2,7 @@ package com.attendance.controller;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Random;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -110,4 +111,40 @@ public class AuthController {
 
 		return ResponseEntity.ok(responseBody);
 	}
+	
+	@PostMapping("/forgot-password")
+    public ResponseEntity<Map<String, Object>> forgotPassword(@RequestBody Map<String, String> request) {
+        Map<String, Object> response = new HashMap<>();
+        String email = request.get("email");
+
+        Student existingUser = studentService.findByEmail(email);
+        if (existingUser == null) {
+            response.put("success", false);
+            response.put("message", "User with this email does not exist");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        }
+
+        // Generate a temporary password
+        String tempPassword = generateTempPassword();
+        existingUser.setPassword(tempPassword); // In real-world, send via email instead
+        studentService.saveStudent(existingUser); // Save updated password
+
+        response.put("success", true);
+        response.put("message", "Temporary password generated. Please check your email.");
+        response.put("tempPassword", tempPassword); // This is for testing. Remove in production.
+
+        return ResponseEntity.ok(response);
+    }
+
+    private String generateTempPassword() {
+        String characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+        StringBuilder tempPassword = new StringBuilder();
+        Random rnd = new Random();
+        for (int i = 0; i < 8; i++) {
+            tempPassword.append(characters.charAt(rnd.nextInt(characters.length())));
+        }
+        return tempPassword.toString();
+    }
+    
+   
 }

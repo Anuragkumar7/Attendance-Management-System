@@ -8,6 +8,7 @@ import ProfilePage from "./components/ProfilePage";
 import ErrorBoundary from "./components/ErrorBoundary";
 import LoginPage from "./components/LoginPage";
 import SignUp from "./components/SignUp";
+import ForgotPassword from "./components/ForgotPassword"; // New Component for Password Reset
 import PrivateRoute from "./components/PrivateRoute";
 
 function App() {
@@ -19,7 +20,8 @@ function App() {
           <Route path="/" element={<LoginSelectPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignUp />} />
-
+          <Route path="/forgot-password" element={<ForgotPassword />} />{" "}
+          {/* New Route */}
           {/* Protected Routes */}
           <Route
             path="/dashboard"
@@ -53,7 +55,6 @@ function App() {
               </PrivateRoute>
             }
           />
-
           {/* Catch-all Route */}
           <Route path="*" element={<Navigate to="/login" />} />
         </Routes>
